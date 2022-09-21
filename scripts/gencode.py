@@ -175,9 +175,9 @@ for file in {os.getcwd()}/{path_to_gencode_files}/*{gencode_version}.sql; do
     SQL_NAME_ARR=(${{SQL_NAME//./ }})
     TABLE_NAME=${{SQL_NAME_ARR[0]}}
     
-    echo "zcat ${{TABLE_NAME}}.txt.gz | sudo {DBMS} -u root -p {db_name} --local-infile=1 -e 'LOAD DATA LOCAL INFILE ""/dev/stdin" INTO TABLE ${{TABLE_NAME}};'"
+    # echo "zcat ${{TABLE_NAME}}.txt.gz | sudo {DBMS} -u root -p {db_name} --local-infile=1 -e 'LOAD DATA LOCAL INFILE '"/dev/stdin"' INTO TABLE ${{TABLE_NAME}};'"
  
-    #sudo {DBMS} -u root -p {db_name} < ${{TABLE_NAME}}_inserts.sql
+    sudo {DBMS} -u root -p {db_name} < ${{TABLE_NAME}}_inserts.sql
 done
 
         ''')
@@ -193,7 +193,7 @@ def main(args):
         os.mkdir("./UCSC_files")
     path_to_gencode_files = get_gencode_files_from_UCSC(args.g, args.d)
     path_to_organism_files = get_organism_files(args.d)
-    # gencode_tables_to_sql_statements(path_to_gencode_files)
+    gencode_tables_to_sql_statements(path_to_gencode_files)
     get_trackDb_entries_as_insert_statements(path_to_gencode_files, path_to_organism_files+"/trackDb.txt.gz", args.g)
     get_hgFindSpec_entries_as_insert_statements(path_to_gencode_files, path_to_organism_files+"/hgFindSpec.txt.gz", args.g)
     write_bash_wrapper(path_to_gencode_files, args.g, args.dbms, args.d)
