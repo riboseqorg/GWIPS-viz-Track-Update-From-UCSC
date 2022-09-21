@@ -169,15 +169,15 @@ def write_bash_wrapper(path_to_gencode_files, gencode_version, DBMS, db_name):
 #/usr/bin/env bash 
 
 for file in {os.getcwd()}/{path_to_gencode_files}/*{gencode_version}.sql; do 
-    {DBMS} {db_name} < $file
+    sudo {DBMS} -u root -p {db_name} < $file
     pathArr=(${{file//// }})
     SQL_NAME=${{pathArr[-1]}}
     SQL_NAME_ARR=(${{SQL_NAME//./ }})
     TABLE_NAME=${{SQL_NAME_ARR[0]}}
     
-    zcat ${{TABLE_NAME}}.txt.gz | {DBMS} --local-infile=1 -e 'LOAD DATA LOCAL INFILE \"/dev/stdin" INTO TABLE ${{TABLE_NAME}};'
+    zcat ${{TABLE_NAME}}.txt.gz | sudo {DBMS} -u root -p --local-infile=1 -e 'LOAD DATA LOCAL INFILE \"/dev/stdin" INTO TABLE ${{TABLE_NAME}};'
  
-    {DBMS} {db_name} < ${{TABLE_NAME}}_inserts.sql
+    sudo {DBMS} -u root -p {db_name} < ${{TABLE_NAME}}_inserts.sql
 done
 
         ''')
