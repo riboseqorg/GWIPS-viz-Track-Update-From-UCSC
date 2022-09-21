@@ -60,6 +60,8 @@ def get_gencode_txt_filenames_as_list(path_to_gencode_files):
 
 def gencode_tables_to_sql_statements(path_to_gencode_files):
     '''
+    DEPRICATED - This is handled with LOAD DATA LOCAL now
+
     takes in path to dir that has .txt.gz and .sql files describing the data pertaining to each table
 
     Parse this data and produce an sql file full of insert statements to populate the table on GWIPS
@@ -138,12 +140,52 @@ def get_trackDb_entries_as_insert_statements(path_to_gencode_files, path_to_trac
         outfile.close()
 
 
-def get_hgFindSpec_entries_as_insert_statements(path_to_gencode_files, path_to_hgFindSpec, args.g):
+def get_hgFindSpec_entries_as_insert_statements(path_to_gencode_files, path_to_hgFindSpec, gencode_version):
     '''
     get all entries from the hgFindSpec txt.gz file that contain wgEncodeGencode and the gencode version and create insert statements 
     '''
+    
+    with gzip.open(path_to_hgFindSpec, 'rt') as f:
+
+        outfile = open(f"{path_to_gencode_files}/hgFindSpec_inserts.sql", 'w')
+        for line in f.readlines():
+            if 'wgEncodeGencode' in line.split('\t')[0] and f"V{gencode_version}" in line.split('\t')[0]:
+                hgFindSpec_entry = '","'.join(line.split('\t')).strip('\n')
+                outfile.write(f'INSERT INTO hgFindSpec VALUES ("{hgFindSpec_entry}");\n')
+        outfile.close()
 
     return True
+
+
+def write_bash_wrapper(path_to_gencode_files, gencode_version, DBMS, db_name):
+    '''
+    Write a bash script to run the sql table creation and inserts 
+
+    DBMS - Database management system (mariadb on poitin, mysql on baileys)
+    '''
+    with open(f"{path_to_gencode_files}/run.sh", 'w') as sh:
+        sh.write(f"# This BASH Script adds Gencode {gencode_version} to GWIPS-viz\n")
+        sh.write(f'''
+#/usr/bin/env bash 
+
+for file in {os.getcwd()}/{path_to_gencode_files}/*{gencode_version}.sql; do 
+    {DBMS} {db_name} < $file
+    pathArr=(${{file//// }})
+    SQL_NAME=${{pathArr[-1]}}
+    SQL_NAME_ARR=(${{SQL_NAME//./ }})
+    TABLE_NAME=${{SQL_NAME_ARR[0]}}
+    
+    zcat ${{TABLE_NAME}}.txt.gz | {DBMS} --local-infile=1 -e 'LOAD DATA LOCAL INFILE \"/dev/stdin" INTO TABLE ${{TABLE_NAME}};'
+ 
+    {DBMS} {db_name} < ${{TABLE_NAME}}_inserts.sql
+done
+
+        ''')
+
+
+
+
+
 
 def main(args):
     path_to_gencode_files = get_gencode_files_from_UCSC(args.g, args.d)
@@ -151,6 +193,7 @@ def main(args):
     gencode_tables_to_sql_statements(path_to_gencode_files)
     get_trackDb_entries_as_insert_statements(path_to_gencode_files, path_to_organism_files+"/trackDb.txt.gz", args.g)
     get_hgFindSpec_entries_as_insert_statements(path_to_gencode_files, path_to_organism_files+"/hgFindSpec.txt.gz", args.g)
+    write_bash_wrapper(path_to_gencode_files, args.g, args.dbms, args.d)
     return True
 
 
@@ -160,6 +203,7 @@ if __name__ == "__main__":
 
     parser.add_argument("-g", help="Gencode version to add (as integer)")
     parser.add_argument("-d", help="UCSC database name eg. hg38")
+    parser.add_argument("--dbms", help="DBMS - Database management system (mariadb on poitin, mysql on baileys)")
 
     args = parser.parse_args()
     main(args)
