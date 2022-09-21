@@ -188,6 +188,9 @@ done
 
 
 def main(args):
+
+    if not os.path.exists("./UCSC_files"):
+        os.mkdir("./UCSC_files")
     path_to_gencode_files = get_gencode_files_from_UCSC(args.g, args.d)
     path_to_organism_files = get_organism_files(args.d)
     gencode_tables_to_sql_statements(path_to_gencode_files)
