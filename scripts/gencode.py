@@ -175,7 +175,7 @@ for file in {os.getcwd()}/{path_to_gencode_files}/*{gencode_version}.sql; do
     SQL_NAME_ARR=(${{SQL_NAME//./ }})
     TABLE_NAME=${{SQL_NAME_ARR[0]}}
     
-    zcat ${{TABLE_NAME}}.txt.gz | sudo {DBMS} -u root -p {db_name} --local-infile=1 -e 'LOAD DATA LOCAL INFILE \"/dev/stdin" INTO TABLE ${{TABLE_NAME}};'
+    echo "zcat ${{TABLE_NAME}}.txt.gz | sudo {DBMS} -u root -p {db_name} --local-infile=1 -e 'LOAD DATA LOCAL INFILE \"/dev/stdin" INTO TABLE ${{TABLE_NAME}};'"
  
     #sudo {DBMS} -u root -p {db_name} < ${{TABLE_NAME}}_inserts.sql
 done
