@@ -193,7 +193,7 @@ def main(args):
         os.mkdir("./UCSC_files")
     path_to_gencode_files = get_gencode_files_from_UCSC(args.g, args.d)
     path_to_organism_files = get_organism_files(args.d)
-    gencode_tables_to_sql_statements(path_to_gencode_files)
+    # gencode_tables_to_sql_statements(path_to_gencode_files)
     get_trackDb_entries_as_insert_statements(path_to_gencode_files, path_to_organism_files+"/trackDb.txt.gz", args.g)
     get_hgFindSpec_entries_as_insert_statements(path_to_gencode_files, path_to_organism_files+"/hgFindSpec.txt.gz", args.g)
     write_bash_wrapper(path_to_gencode_files, args.g, args.dbms, args.d)
