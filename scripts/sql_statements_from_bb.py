@@ -45,7 +45,8 @@ def inserts_from_bb(path_to_bb, path_to_bigBedToBed_binary):
             line = [i.replace('"', '') for i in line]
 
             entries = '","'.join(line)
-            outfile.write(f'INSERT INTO {file} VALUES ("{entries}");\n')
+            table_name = file.split('.')[0]
+            outfile.write(f'INSERT INTO {table_name} VALUES ("{entries}");\n')
             outfile.close()
 
 
@@ -64,7 +65,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", help="Path to bigBed")
     parser.add_argument("-d", help="UCSC database name eg. hg38")
     parser.add_argument("--dbms", help="DBMS - Database management system (mariadb on poitin, mysql on baileys)")
-    parser.add_argument("-b", help="path to bigBedToBed bianry 'wget ftp://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64.v369/bedToBigBed'")
+    parser.add_argument("-b", help="path to bigBedToBed bianry 'wget ftp://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64.v369/bigBedToBed'")
 
 
     args = parser.parse_args()
