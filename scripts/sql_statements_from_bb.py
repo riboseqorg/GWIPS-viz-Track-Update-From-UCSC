@@ -12,26 +12,26 @@ import os
 import subprocess
 
 
-def bigBed_to_bed(bigBed_path, bed_outpath):
+def bigBed_to_bed(bigBed_path, bed_outpath, path_to_bigBedToBed_binary):
     '''
     run the bigBed to Bed program
     inputs and outputs from given paths. output is bed file
     '''
     try:
-        subprocess.run(['/home/jack/Downloads/Tools/kent/./bigBedToBed', f'{bigBed_path}', f'{bed_outpath}'])
+        subprocess.run([path_to_bigBedToBed_binary, f'{bigBed_path}', f'{bed_outpath}'])
     except:
         subprocess.run(['wget', '--timestamping', 'ftp://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64.v369/bedToBigBed'])
         subprocess.run(['./bigBedToBed', f'{bigBed_path}', f'{bed_outpath}'])
 
 
-def inserts_from_bb(path_to_bb):
+def inserts_from_bb(path_to_bb, path_to_bigBedToBed_binary):
     '''
     convert big bed to bed and make sql inserts from bed
     '''
     path_list = path_to_bb.split('/')
     path_to_track_files = '/'.join(path_list[:-1])
     file = path_list[-1]
-    bigBed_to_bed(path_to_bb, path_to_track_files + '/' + file + '.bed')
+    bigBed_to_bed(path_to_bb, path_to_track_files + '/' + file + '.bed', path_to_bigBedToBed_binary)
     with open(f"{path_to_track_files}/{file}.bed",'r') as f:
         lines = [i.strip('\n').split('\t') for i in f.readlines()]
         avg_line_len = round(sum(len(i) for i in lines[:1000])/len(lines[:1000]))
@@ -53,7 +53,7 @@ def main(args):
     '''
     
     '''
-    inserts_from_bb(args.t)
+    inserts_from_bb(args.t, args.b)
 
     return True
 
@@ -64,6 +64,8 @@ if __name__ == "__main__":
     parser.add_argument("-t", help="Path to bigBed")
     parser.add_argument("-d", help="UCSC database name eg. hg38")
     parser.add_argument("--dbms", help="DBMS - Database management system (mariadb on poitin, mysql on baileys)")
+    parser.add_argument("-b", help="path to bigBedToBed bianry 'wget ftp://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64.v369/bedToBigBed'")
+
 
     args = parser.parse_args()
     main(args)
