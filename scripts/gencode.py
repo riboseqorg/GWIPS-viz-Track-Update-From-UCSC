@@ -131,14 +131,14 @@ def get_trackDb_entries_as_insert_statements(path_to_gencode_files, path_to_trac
         for entry in entries:
             for table in table_names:
                 if table == entry[0][0]:
-                    col_21 = ' \n '.join([i[0].strip('\\') for i in entry[1:]]) # merge the data for col21 into the one list element as is is split over mulitple lines
+                    col_21 = '\n '.join([i[0].strip('\\') for i in entry[1:]]) # merge the data for col21 into the one list element as is is split over mulitple lines
 
                     # some entries have missing columns. Add these as blank in the seconds last position to make up numbers
                     if len(entry[0]) < 21:
                         for i in range(21 - len(entry[0])):
                             entry[0].insert(-2,'')
 
-                    entry[0][20] = entry[0][20].strip('\\')+ ' \n ' + col_21                    
+                    entry[0][20] = entry[0][20].strip('\\')+ '\n ' + col_21                    
                     tidy_entry = [i.replace('"', "'") for i in entry[0]]
 
                     trackDb_entry = '","'.join(tidy_entry)
