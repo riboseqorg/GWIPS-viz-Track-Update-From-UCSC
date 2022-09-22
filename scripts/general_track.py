@@ -63,6 +63,39 @@ def get_txt_filenames_as_list(path_to_files):
     return txt_file_list
 
 
+def tables_to_sql_statements(path_to_track_files):
+    '''
+    DEPRICATED - This is handled with LOAD DATA LOCAL now
+
+    takes in path to dir that has .txt.gz and .sql files describing the data pertaining to each table
+
+    Parse this data and produce an sql file full of insert statements to populate the table on GWIPS
+    '''
+
+    for file in get_txt_filenames_as_list(path_to_track_files):
+        table_name = file.strip('.txt.gz')
+
+        if os.path.exists(f"{path_to_track_files}/{table_name}_inserts.sql"):
+            print(f"Insert statements already created: {table_name}")
+            continue
+        else:
+            print(f"Writing statements for: {file}")
+
+        with gzip.open(f"{path_to_track_files}/{file}",'rt') as f:
+            lines = [i.strip('\n').split('\t') for i in f.readlines()]
+            avg_line_len = round(sum(len(i) for i in lines[:1000])/len(lines[:1000]))
+            
+            for line in lines:
+                if os.path.exists(f"{path_to_track_files}/{table_name}_inserts.sql"):
+                    outfile = open(f"{path_to_track_files}/{table_name}_inserts.sql", 'a')
+                else:
+                    outfile = open(f"{path_to_track_files}/{table_name}_inserts.sql", 'w')
+
+                line = [i.replace('"', '') for i in line]
+
+                entries = '","'.join(line)
+                outfile.write(f'INSERT INTO {table_name} VALUES ("{entries}");\n')
+                outfile.close()
 
 
 def split_txt_file_into_entries(file_object):
@@ -145,19 +178,22 @@ def write_bash_wrapper(path_to_track_files, track_name, DBMS, db_name):
 #/usr/bin/env bash 
 
 for file in {os.getcwd()}/{path_to_track_files}/*{track_name}.sql; do 
-    sudo {DBMS} -u root -p {db_name} < $file
+    sudo {DBMS} -u root -p {db_name} < $file # set up tracks table in the database
+
+    # Get the Table name from file path 
     pathArr=(${{file//// }})
     SQL_NAME=${{pathArr[-1]}}
     SQL_NAME_ARR=(${{SQL_NAME//./ }})
     TABLE_NAME=${{SQL_NAME_ARR[0]}}
     
     echo "inserting ${db_name}"
-
-    zcat ${{TABLE_NAME}}.txt.gz | sudo {DBMS} -u root -p {db_name} --local-infile=1 -e 'LOAD DATA LOCAL INFILE '"/dev/stdin"' INTO TABLE ${{TABLE_NAME}};'
-    # sudo {DBMS} -u root -p {db_name} < ${{TABLE_NAME}}_inserts.sql
+    # populate the created table with data from .txt file 
+    #zcat ${{TABLE_NAME}}.txt.gz | sudo {DBMS} -u root -p {db_name} --local-infile=1 -e 'LOAD DATA LOCAL INFILE '"/dev/stdin"' INTO TABLE ${{TABLE_NAME}};'
+    sudo {DBMS} -u root -p {db_name} < ${{TABLE_NAME}}_inserts.sql
     echo "Done"
 done
 
+#Add respective entries to trackDb and hgFindSpec
 sudo {DBMS} -u root -p {db_name} < trackDb_inserts.sql
 sudo {DBMS} -u root -p {db_name} < hgFindSpec_inserts.sql
 
@@ -171,6 +207,7 @@ def main(args):
         os.mkdir("./UCSC_files")
     path_to_track_files = get_track_files_from_UCSC(args.t, args.d)
     path_to_organism_files = get_organism_files(args.d)
+    tables_to_sql_statements(path_to_track_files)
     get_trackDb_entries_as_insert_statements(path_to_track_files, path_to_organism_files+"/trackDb.txt.gz", args.t)
     get_hgFindSpec_entries_as_insert_statements(path_to_track_files, path_to_organism_files+"/hgFindSpec.txt.gz", args.t)
     write_bash_wrapper(path_to_track_files, args.t, args.dbms, args.d)
