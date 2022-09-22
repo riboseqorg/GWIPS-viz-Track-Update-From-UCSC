@@ -78,12 +78,15 @@ def gencode_tables_to_sql_statements(path_to_gencode_files):
 
         with gzip.open(f"{path_to_gencode_files}/{file}",'rt') as f:
             lines = [i.strip('\n').split('\t') for i in f.readlines()]
-
+            avg_line_len = round(sum(len(i) for i in lines[:1000])/len(lines[:1000]))
+            print(avg_line_len)
             for line in lines:
                 if os.path.exists(f"{path_to_gencode_files}/{table_name}_inserts.sql"):
                     outfile = open(f"{path_to_gencode_files}/{table_name}_inserts.sql", 'a')
                 else:
                     outfile = open(f"{path_to_gencode_files}/{table_name}_inserts.sql", 'w')
+
+                line = [i.replace('"', '') for i in line]
 
                 entries = '","'.join(line)
                 outfile.write(f'INSERT INTO {table_name} VALUES ("{entries}");\n')
@@ -134,8 +137,9 @@ def get_trackDb_entries_as_insert_statements(path_to_gencode_files, path_to_trac
                             entry[0].insert(-2,'')
 
                     entry[0][20] = entry[0][20].strip('\\')+ ' \n ' + col_21                    
+                    tidy_entry = [i.replace('"', "'") for i in entry[0]]
 
-                    trackDb_entry = '","'.join(entry[0])
+                    trackDb_entry = '","'.join(tidy_entry)
                     outfile.write(f'INSERT INTO trackDb VALUES ("{trackDb_entry}");\n')
         outfile.close()
 
@@ -176,9 +180,13 @@ for file in {os.getcwd()}/{path_to_gencode_files}/*{gencode_version}.sql; do
     TABLE_NAME=${{SQL_NAME_ARR[0]}}
     
     # echo "zcat ${{TABLE_NAME}}.txt.gz | sudo {DBMS} -u root -p {db_name} --local-infile=1 -e 'LOAD DATA LOCAL INFILE '"/dev/stdin"' INTO TABLE ${{TABLE_NAME}};'"
- 
+    echo "inserting ${db_name}"
     sudo {DBMS} -u root -p {db_name} < ${{TABLE_NAME}}_inserts.sql
+    echo "Done"
 done
+
+
+
 
         ''')
 
