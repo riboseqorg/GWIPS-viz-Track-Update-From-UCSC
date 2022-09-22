@@ -46,7 +46,7 @@ def get_organism_files(organism_db, base_path="ftp://hgdownload.soe.ucsc.edu/gol
 
     return outfile_path
 
-def get_gencode_txt_filenames_as_list(path_to_gencode_files):
+def get_txt_filenames_as_list(path_to_gencode_files):
     '''
     return all txt.gz files names from the provided directory 
     '''
@@ -67,7 +67,7 @@ def gencode_tables_to_sql_statements(path_to_gencode_files):
     Parse this data and produce an sql file full of insert statements to populate the table on GWIPS
     '''
 
-    for file in get_gencode_txt_filenames_as_list(path_to_gencode_files):
+    for file in get_txt_filenames_as_list(path_to_gencode_files):
         table_name = file.strip('.txt.gz')
 
         if os.path.exists(f"{path_to_gencode_files}/{table_name}_inserts.sql"):
@@ -79,7 +79,7 @@ def gencode_tables_to_sql_statements(path_to_gencode_files):
         with gzip.open(f"{path_to_gencode_files}/{file}",'rt') as f:
             lines = [i.strip('\n').split('\t') for i in f.readlines()]
             avg_line_len = round(sum(len(i) for i in lines[:1000])/len(lines[:1000]))
-            print(avg_line_len)
+            
             for line in lines:
                 if os.path.exists(f"{path_to_gencode_files}/{table_name}_inserts.sql"):
                     outfile = open(f"{path_to_gencode_files}/{table_name}_inserts.sql", 'a')
@@ -117,7 +117,7 @@ def get_trackDb_entries_as_insert_statements(path_to_gencode_files, path_to_trac
     Also, obtain specific entries for wgEncodeGencodeV* and wgEncodeGencodeV*ViewGenes
     Write the insert statments to a file in the gencode dir
     '''
-    gencode_files = get_gencode_txt_filenames_as_list(path_to_gencode_files)
+    gencode_files = get_txt_filenames_as_list(path_to_gencode_files)
     table_names = [file.strip(".txt.gz") for file in gencode_files]
     table_names.append(f'wgEncodeGencodeV{gencode_version}')
     table_names.append(f'wgEncodeGencodeV{gencode_version}ViewGenes')
@@ -187,14 +187,10 @@ for file in {os.getcwd()}/{path_to_gencode_files}/*{gencode_version}.sql; do
     echo "Done"
 done
 
-
-
+sudo {DBMS} -u root -p {db_name} < trackDb_inserts.sql
+sudo {DBMS} -u root -p {db_name} < hgFindSpec_inserts.sql
 
         ''')
-
-
-
-
 
 
 def main(args):
