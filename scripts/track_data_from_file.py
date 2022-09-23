@@ -15,6 +15,8 @@ def get_file_from_url(url, path_to_files, path_to_organismDb_in_gbdb):
     '''
     download the data file from the provided url with wget
     '''
+    if not os.path.exists(path_to_organismDb_in_gbdb):
+        subprocess.run(['sudo', 'mkdir', '-P', path_to_organismDb_in_gbdb])
     os.chdir(path_to_files)
     subprocess.run(['sudo', 'wget', '--timestamping', url, '-P', path_to_organismDb_in_gbdb])
     os.chdir("../..")
