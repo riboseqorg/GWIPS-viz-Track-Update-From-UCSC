@@ -63,17 +63,17 @@ INSERT INTO {table_name} VALUES ({path_in_gbdb_to_file})
     return f"{outpath_to_files}/{table_name}_inserts.sql"
 
 
-def write_bash_wrapper(table_creation_sql_path, inserts_sql_path, path_to_track_files, DBMS):
+def write_bash_wrapper(table_name, path_to_track_files, DBMS):
     '''
     write a shell script to execute the sql inserts created by this script
     '''
-    db_name = path_to_track_files.split('/')[-2]
+    db_name = path_to_track_files.split('/')[-2].split('_')[0]
 
     with open(f"{path_to_track_files}/run.sh", 'w') as f:
         f.write(f"""
 #/usr/bin/env bash 
-sudo {DBMS} -u root -p {db_name} < {table_creation_sql_path}
-sudo {DBMS} -u root -p {db_name} < {inserts_sql_path}
+sudo {DBMS} -u root -p {db_name} < {table_name}.sql
+sudo {DBMS} -u root -p {db_name} < {table_name}_inserts.sql
 
 
 #Add respective hgFindSpec and trackDb entries
@@ -92,7 +92,7 @@ def main(args):
     path_in_gbdb_to_file = args.o + '/' + args.u.split("/")[-1] 
     inserts_sql_path = write_table_inserts(table_name, path_in_gbdb_to_file, args.p)
 
-    write_bash_wrapper(table_creation_sql_path, inserts_sql_path, args.p, args.dbms)
+    write_bash_wrapper(table_name, args.p, args.dbms)
     return True
 
 
