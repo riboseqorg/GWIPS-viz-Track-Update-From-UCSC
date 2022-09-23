@@ -58,7 +58,7 @@ def write_table_inserts(table_name, path_in_gbdb_to_file, outpath_to_files):
     '''
     with open(f"{outpath_to_files}/{table_name}_inserts.sql", 'w') as f:
         f.write(f"""
-INSERT INTO {table_name} VALUES ({path_in_gbdb_to_file});
+INSERT INTO {table_name} VALUES ('{path_in_gbdb_to_file}');
         """)
     if outpath_to_files[-1] == '/':
         return f"{outpath_to_files}{table_name}_inserts.sql"
