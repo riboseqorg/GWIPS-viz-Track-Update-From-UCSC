@@ -37,7 +37,7 @@ def create_table(path_to_files, table_name):
     '''
     Write the table creation from the template below
     '''
-    with open(f'{path_to_files}/{table_name}.sql') as f:
+    with open(f'{path_to_files}/{table_name}.sql', 'w') as f:
         f.write(f"""
 
 
