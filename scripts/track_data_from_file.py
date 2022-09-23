@@ -16,7 +16,7 @@ def get_file_from_url(url, path_to_files, path_to_organismDb_in_gbdb):
     download the data file from the provided url with wget
     '''
     os.chdir(path_to_files)
-    subprocess.run(['sudo', 'wget', '--timestamping', url, '-o', path_to_organismDb_in_gbdb])
+    subprocess.run(['sudo', 'wget', '--timestamping', url, '-P', path_to_organismDb_in_gbdb])
     os.chdir("../..")
 
 
@@ -29,7 +29,6 @@ def get_table_name_from_hgFindSpec(path_to_track_files):
         line = f.readline()
         insert_values = line.split('(')[1]
         table_name = insert_values.split(',')[0]
-        print(table_name)
         return table_name.replace('"', '')
 
 
@@ -50,6 +49,8 @@ CREATE TABLE `{table_name}` (
         
         
         """)
+    return f'{path_to_files}/{table_name}.sql'
+
 
 def write_table_inserts(table_name, path_in_gbdb_to_file, outpath_to_files):
     '''
@@ -57,8 +58,29 @@ def write_table_inserts(table_name, path_in_gbdb_to_file, outpath_to_files):
     '''
     with open(f"{outpath_to_files}/{table_name}_inserts.sql", 'w') as f:
         f.write(f"""
-        INSERT INTO {table_name} VALUES ({path_in_gbdb_to_file})
+INSERT INTO {table_name} VALUES ({path_in_gbdb_to_file})
         """)
+    return f"{outpath_to_files}/{table_name}_inserts.sql"
+
+
+def write_bash_wrapper(table_creation_sql_path, inserts_sql_path, path_to_track_files, DBMS):
+    '''
+    write a shell script to execute the sql inserts created by this script
+    '''
+    db_name = path_to_track_files.split('/')[-2]
+
+    with open(f"{path_to_track_files}/run.sh", 'w') as f:
+        f.write(f"""
+#/usr/bin/env bash 
+sudo {DBMS} -u root -p {db_name} < {table_creation_sql_path}
+sudo {DBMS} -u root -p {db_name} < {inserts_sql_path}
+
+
+#Add respective hgFindSpec and trackDb entries
+sudo {DBMS} -u root -p {db_name} < trackDb_inserts.sql
+sudo {DBMS} -u root -p {db_name} < hgFindSpec_inserts.sql
+        """)
+
 
 def main(args):
     '''
@@ -66,10 +88,11 @@ def main(args):
     '''
     get_file_from_url(args.u, args.p, args.o)
     table_name = get_table_name_from_hgFindSpec(args.p)
-    create_table(args.p, table_name)
+    table_creation_sql_path = create_table(args.p, table_name)
     path_in_gbdb_to_file = args.o + '/' + args.u.split("/")[-1] 
-    print(path_in_gbdb_to_file)
-    write_table_inserts(table_name, path_in_gbdb_to_file, args.p)
+    inserts_sql_path = write_table_inserts(table_name, path_in_gbdb_to_file, args.p)
+
+    write_bash_wrapper(table_creation_sql_path, inserts_sql_path, args.p, args.dbms)
     return True
 
 
