@@ -67,7 +67,7 @@ def main(args):
     get_file_from_url(args.u, args.p, args.o)
     table_name = get_table_name_from_hgFindSpec(args.p)
     create_table(args.p, table_name)
-    path_in_gbdb_to_file = args.o + '/' + args.url.split("/")[-1] 
+    path_in_gbdb_to_file = args.o + '/' + args.u.split("/")[-1] 
     print(path_in_gbdb_to_file)
     write_table_inserts(table_name, path_in_gbdb_to_file, args.p)
     return True
