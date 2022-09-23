@@ -29,6 +29,7 @@ def get_table_name_from_hgFindSpec(path_to_track_files):
         line = f.readline()
         insert_values = line.split('(')[1]
         table_name = insert_values.split(',')
+        print(table_name)
         return table_name.replace('"', '')
 
 
