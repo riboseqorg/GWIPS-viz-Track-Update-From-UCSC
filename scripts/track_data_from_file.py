@@ -11,13 +11,14 @@ import os
 import subprocess
 
 
-def get_file_from_url(url, path_to_files):
+def get_file_from_url(url, path_to_files, path_to_organismDb_in_gbdb):
     '''
     download the data file from the provided url with wget
     '''
     os.chdir(path_to_files)
-    subprocess.run(['wget', '--timestamping', url])
+    subprocess.run(['sudo', 'wget', '--timestamping', url, '-o', path_to_organismDb_in_gbdb])
     os.chdir("../..")
+
 
 def get_table_name_from_hgFindSpec(path_to_track_files):
     '''
@@ -49,13 +50,25 @@ CREATE TABLE `{table_name}` (
         
         """)
 
+def write_table_inserts(table_name, path_in_gbdb_to_file, outpath_to_files):
+    '''
+    Insert into the track table the path to the data file 
+    '''
+    with open(f"{outpath_to_files}/{table_name}_inserts.sql", 'w') as f:
+        f.write(f"""
+        INSERT INTO {table_name} VALUES ({path_in_gbdb_to_file})
+        """)
+
 def main(args):
     '''
     run functions
     '''
-    get_file_from_url(args.u, args.p)
+    get_file_from_url(args.u, args.p, args.o)
     table_name = get_table_name_from_hgFindSpec(args.p)
     create_table(args.p, table_name)
+    path_in_gbdb_to_file = args.o + '/' + args.url.split("/")[-1] 
+    print(path_in_gbdb_to_file)
+    write_table_inserts(table_name, path_in_gbdb_to_file, args.p)
     return True
 
 
@@ -64,6 +77,7 @@ if __name__ == "__main__":
 
     parser.add_argument("-u", help="URL to file on gbdb ")
     parser.add_argument("-p", help="path to sql statements for hgTracks and hgFindSpec")
+    parser.add_argument("-o", help="path to oragnsim Db in gbdb on host server")
     parser.add_argument("--dbms", help="DBMS - Database management system (mariadb on poitin, mysql on baileys)")
 
 
