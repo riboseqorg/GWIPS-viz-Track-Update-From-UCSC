@@ -17,8 +17,11 @@ def get_file_from_url(url, path_to_files, path_to_organismDb_in_gbdb):
     '''
     if not os.path.exists(path_to_organismDb_in_gbdb):
         subprocess.run(['sudo', 'mkdir', '-P', path_to_organismDb_in_gbdb])
+    
+    url = '.'.join(url.split('.')[:-1]) #remove extension from URL so * can be added
+    url = "ftp:" + ':'.join(url.split(':')[1:]) # ensure link is ftp so we can use wildcards (*)
     os.chdir(path_to_files)
-    subprocess.run(['sudo', 'wget', '--timestamping', url, '-P', path_to_organismDb_in_gbdb])
+    subprocess.run(['sudo', 'wget', '--timestamping', url + "*", '-P', path_to_organismDb_in_gbdb])
     os.chdir("../..")
 
 
