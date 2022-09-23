@@ -124,7 +124,7 @@ def get_trackDb_entries_as_insert_statements(path_to_gencode_files, path_to_trac
     table_names.append(f'wgEncodeGencodeV{gencode_version}View2Way')
     table_names.append(f'wgEncodeGencodeV{gencode_version}ViewPolya')
 
-    with gzip.open(path_to_trackDb, 'rt') as f:
+    with gzip.open(path_to_trackDb, 'rt', encoding="ISO-8859-1") as f:
         entries = split_txt_file_into_entries(f)
         
         outfile = open(f"{path_to_gencode_files}/trackDb_inserts.sql", 'w')
