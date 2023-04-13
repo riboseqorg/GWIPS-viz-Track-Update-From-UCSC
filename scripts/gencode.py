@@ -142,6 +142,23 @@ def get_trackDb_entries_as_insert_statements(path_to_gencode_files, path_to_trac
                     tidy_entry = [i.replace('"', "'") for i in entry[0]]
 
                     trackDb_entry = '","'.join(tidy_entry)
+                    gene_tables = [f"wgEncodeGencodeBasicV{gencode_version}", f"wgEncodeGencodeCompV{gencode_version}", f"wgEncodeGencodePseudoGeneV{gencode_version}", f"wgEncodeGencodePolyAV{gencode_version}"]
+                    print(table)
+                    print(gene_tables)
+                    if table in gene_tables:
+                        trackDb_entry += f"""wgEncodeGencodeAttrs wgEncodeGencodeAttrsV{gencode_version}
+ wgEncodeGencodeGeneSource wgEncodeGencodeGeneSourceV{gencode_version}
+ wgEncodeGencodeTranscriptSource wgEncodeGencodeTranscriptSourceV{gencode_version}
+ wgEncodeGencodePdb wgEncodeGencodePdbV{gencode_version}
+ wgEncodeGencodePubMed wgEncodeGencodePubMedV{gencode_version}
+ wgEncodeGencodeRefSeq wgEncodeGencodeRefSeqV{gencode_version}
+ wgEncodeGencodeTag wgEncodeGencodeTagV{gencode_version}
+ wgEncodeGencodeUniProt wgEncodeGencodeUniProtV{gencode_version}
+ wgEncodeGencodeTranscriptSupport wgEncodeGencodeTranscriptSupportV{gencode_version}
+                        """
+                    print(table)
+                    print(trackDb_entry)
+                    print()
                     outfile.write(f'INSERT INTO trackDb VALUES ("{trackDb_entry}");\n')
         outfile.close()
 
