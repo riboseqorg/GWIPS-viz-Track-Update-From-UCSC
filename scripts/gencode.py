@@ -7,7 +7,7 @@ import subprocess
 import os
 import gzip
 
-def get_gencode_files_from_UCSC(gencode_version, organism_db, base_path="ftp://hgdownload.soe.ucsc.edu/goldenPath"):
+def get_gencode_files_from_UCSC(gencode_version, organism_db, base_path="rsync://hgdownload.cse.ucsc.edu/goldenPath"):
     '''
     download files from UCSC for the desired gencode version 
 
@@ -19,13 +19,13 @@ def get_gencode_files_from_UCSC(gencode_version, organism_db, base_path="ftp://h
     outfile_path = f"./UCSC_files/{organism_db}_gencodeV{str(gencode_version)}"
     if not os.path.exists(outfile_path):
         os.mkdir(outfile_path)
-    os.chdir(outfile_path)
-    subprocess.run(['wget', "--timestamping", url])
-    os.chdir("../..")
+    # os.chdir(outfile_path)
+    subprocess.run(['rsync', "-avzP", url, outfile_path])
+    # os.chdir("../..")
     return outfile_path
 
 
-def get_organism_files(organism_db, base_path="ftp://hgdownload.soe.ucsc.edu/goldenPath"):
+def get_organism_files(organism_db, base_path="rsync://hgdownload.cse.ucsc.edu/goldenPath"):
     '''
     hgFindSpec and trackDb are also required to set the desired annotation track up on GWIPS-viz
 
@@ -38,11 +38,10 @@ def get_organism_files(organism_db, base_path="ftp://hgdownload.soe.ucsc.edu/gol
     outfile_path = f"./UCSC_files/{organism_db}"
     if not os.path.exists(outfile_path):
         os.mkdir(outfile_path)
-    os.chdir(outfile_path)
-
-    subprocess.run(['wget', "--timestamping", trackDb_url])
-    subprocess.run(['wget', "--timestamping", hgFindSpec_url])
-    os.chdir("../..")
+    # os.chdir(outfile_path)
+    subprocess.run(['rsync', "-avzP", trackDb_url, outfile_path])
+    subprocess.run(['rsync', "-avzP", hgFindSpec_url, outfile_path])
+    # os.chdir("../..")
 
     return outfile_path
 
@@ -193,7 +192,7 @@ def write_bash_wrapper(path_to_gencode_files, gencode_version, DBMS, db_name):
 
 for file in {os.getcwd()}/{path_to_gencode_files}/*{gencode_version}.sql; do 
     # craete table in database 
-    sudo {DBMS} -u root -p {db_name} < $file
+    sudo {DBMS} -u root {db_name} < $file
 
     #get table name from the file path 
     pathArr=(${{file//// }})
@@ -204,13 +203,13 @@ for file in {os.getcwd()}/{path_to_gencode_files}/*{gencode_version}.sql; do
     # populate the table with data from .txt file
     # echo "zcat ${{TABLE_NAME}}.txt.gz | sudo {DBMS} -u root -p {db_name} --local-infile=1 -e 'LOAD DATA LOCAL INFILE '"/dev/stdin"' INTO TABLE ${{TABLE_NAME}};'"
     echo "inserting ${db_name}"
-    sudo {DBMS} -u root -p {db_name} < ${{TABLE_NAME}}_inserts.sql
+    sudo {DBMS} -u root {db_name} < ${{TABLE_NAME}}_inserts.sql
     echo "Done"
 done
 
 #Add respective hgFindSpec and trackDb entries
-sudo {DBMS} -u root -p {db_name} < trackDb_inserts.sql
-sudo {DBMS} -u root -p {db_name} < hgFindSpec_inserts.sql
+sudo {DBMS} -u root {db_name} < trackDb_inserts.sql
+sudo {DBMS} -u root {db_name} < hgFindSpec_inserts.sql
 
         ''')
 
